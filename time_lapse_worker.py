@@ -27,7 +27,6 @@ class TimeLapseWorker:
         if not self._output_folder.is_dir():
             raise IOError("Given target folder does not exist!")
 
-        self._should_continue = True
         self._photo_count_limit = photo_count_limit or float("inf")
 
         # We initialize total shoot count to the number of photos in the given output folder.
@@ -39,7 +38,7 @@ class TimeLapseWorker:
 
         self.__camera.resolution = (1024, 1024)
         self.__camera.rotation = 180
-       
+
         # Set ISO to the desired value
         self.__camera.iso = 800
         time.sleep(5)
@@ -51,17 +50,21 @@ class TimeLapseWorker:
         self.__camera.awb_mode = 'off'
         self.__camera.awb_gains = g
 
-
     def _get_file_name(self):
 
         format_string = "%Y%m%d_%H%M%S"  # We do not need more precision than seconds.
         target_file_name = datetime.datetime.strftime(datetime.datetime.now(),  format_string) + OUTPUT_EXTENSION
         return Path(self._output_folder) / target_file_name
 
-    def _shoot(self):
+    def _can_shoot(self):
 
         if time.time() - self.__last_shot_time <= self._interval:
-            return
+            return False
+
+        return True
+
+
+    def _shoot(self):
 
         print("Shooting!")
 
@@ -80,15 +83,19 @@ class TimeLapseWorker:
         print(f"Successfully saved file as:\n\t{target_file}.")
         print(f"Total shots: {self._total_shot_count}")
 
-    def _do_checks(self):
+    def _should_continue(self):
 
         if self._total_shot_count >= self._photo_count_limit:
             print(f"Maximum photo limit {self._photo_count_limit} has been reached, exiting... ")
-            self._should_continue = False
+            return False
+
+        return True
+
 
     def start(self):
 
         print("Starting...")
+
         self._set_options()
         self.__last_shot_time = time.time()
 
@@ -98,10 +105,10 @@ class TimeLapseWorker:
             # Check every 0.1 seconds.
             time.sleep(.1)
 
-            self._shoot()
+            if self._can_shoot():
+                self._shoot()
 
-            self._do_checks()
-            if not self._should_continue:
+            if not self._should_continue():
                 break
 
         print("Finished...")
