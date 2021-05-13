@@ -37,11 +37,11 @@ class TimeLapseWorker:
     def _set_options(self):
 
         self.__camera.resolution = (1024, 1024)
-        self.__camera.rotation = 180
+#        self.__camera.rotation = 180
 
         # Set ISO to the desired value
-        self.__camera.iso = 800
-        time.sleep(5)
+#        self.__camera.iso = 800
+        time.sleep(1)
         # Wait for the automatic gain control to settle
         # Now fix the values
         self.__camera.shutter_speed = self.__camera.exposure_speed
@@ -98,16 +98,9 @@ class TimeLapseWorker:
 
         self._set_options()
         self.__last_shot_time = time.time()
-
-        # Main loop.
-        while True:
-
-            # Check every 0.1 seconds.
-            time.sleep(.1)
-
-            if self._can_shoot():
-                self._shoot()
-
+        for image in self.__camera.capture_continuous(f"{Path(self._output_folder)}/" + "{timestamp:%Y%m%d_%H%M%S}" + OUTPUT_EXTENSION):
+            print(f"Image: {image}\nNumber: {self._total_shot_count}")
+            self._total_shot_count += 1
             if not self._should_continue():
                 break
 
