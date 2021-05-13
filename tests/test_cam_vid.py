@@ -16,7 +16,7 @@ print("Testing camera...")
 
 resolution = (640, 640)
 camera = PiCamera(resolution=resolution)
-camera.rotation = 180
+# camera.rotation = 180
 
 raw_capture = PiRGBArray(camera, size=resolution)
 
