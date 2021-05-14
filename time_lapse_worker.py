@@ -41,7 +41,7 @@ class TimeLapseWorker:
 
         # Set ISO to the desired value
 #        self.__camera.iso = 800
-        time.sleep(1)
+        time.sleep(15)
         # Wait for the automatic gain control to settle
         # Now fix the values
         self.__camera.shutter_speed = self.__camera.exposure_speed
