@@ -56,33 +56,6 @@ class TimeLapseWorker:
         target_file_name = datetime.datetime.strftime(datetime.datetime.now(),  format_string) + OUTPUT_EXTENSION
         return Path(self._output_folder) / target_file_name
 
-    def _can_shoot(self):
-
-        if time.time() - self.__last_shot_time <= self._interval:
-            return False
-
-        return True
-
-
-    def _shoot(self):
-
-        print("Shooting!")
-
-        time.sleep(1)
-        target_file = self._get_file_name()
-
-        raw_capture = PiRGBArray(self.__camera)
-
-        self.__camera.capture(raw_capture, format="bgr")
-        image = raw_capture.array
-
-        cv2.imwrite(str(target_file), image)
-        self._total_shot_count += 1
-        self.__last_shot_time = time.time()
-
-        print(f"Successfully saved file as:\n\t{target_file}.")
-        print(f"Total shots: {self._total_shot_count}")
-
     def _should_continue(self):
 
         if self._total_shot_count >= self._photo_count_limit:
@@ -101,6 +74,8 @@ class TimeLapseWorker:
         for image in self.__camera.capture_continuous(f"{Path(self._output_folder)}/" + "{timestamp:%Y%m%d_%H%M%S}" + OUTPUT_EXTENSION):
             print(f"Image: {image}\nNumber: {self._total_shot_count}")
             self._total_shot_count += 1
+            time.sleep(self._interval)
+
             if not self._should_continue():
                 break
 
