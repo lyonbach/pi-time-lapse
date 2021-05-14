@@ -3,24 +3,32 @@ from pathlib import Path
 import sys
 sys.path.append("/home/lyonbach/Repositories/pi-time-lapse")
 
+from picamera import PiCamera
+from picamera.array import PiRGBArray
+
+
 import cv2
 import camera_alignment as ca
+import time
 
 
 if __name__ == "__main__":
 
-    search_images = list(Path("/home/lyonbach/Pictures").glob("*search*.png"))
+    resolution = (1024, 1024)
+    camera = PiCamera(resolution=resolution)
+    raw_capture = PiRGBArray(camera, size=resolution)
+    for frame in camera.capture_continuous(raw_capture, format="bgr", use_video_port=True):
+        image = frame.array
 
-    source_image_path = str(search_images[0])
-    source_image_path = "/home/lyonbach/Pictures/search_image_2_not_aligned.png"
+        assertions, showcase_matrix = ca.get_alignment_info(image)
+        cv2.imshow("Frame", showcase_matrix)
+        key = cv2.waitKey(1) & 0xFF
 
-    should_continue = True
-    while should_continue:
-        for image in search_images:
-            print(f"Image\n\t:{str(image)}")
-            assertions, showcase_matrix = ca.get_alignment_info(str(image))
-            cv2.imshow("temp", showcase_matrix)
-            if cv2.waitKey(0) == ord('q'):
-                should_continue = False
-                break
+        raw_capture.truncate(0)
+        time.sleep(1)
+
+        if key == ord('q'):
+            break
+
     cv2.destroyAllWindows()
+
