@@ -140,15 +140,12 @@ def _draw_marker_rectangles(source_matrix: np.ndarray, marker_coordinates:tuple,
     cv2.rectangle(source_matrix, top_left_l, bot_right_l, [0, 255, 0], thickness)
     cv2.rectangle(source_matrix, top_left_r, bot_right_r, [255, 0, 0], thickness)
 
-def get_alignment_info(source_image_path: str):
+def get_alignment_info(source_matrix: np.ndarray):
 
+    showcase_matrix = source_matrix.copy()
     # Read the source image.
-    source_matrix = cv2.imread(source_image_path, cv2.IMREAD_GRAYSCALE)
-    showcase_matrix = cv2.imread(source_image_path, cv2.IMREAD_UNCHANGED)
-
-    showcase_matrix [:,:,0] = source_matrix
-    showcase_matrix [:,:,1] = source_matrix
-    showcase_matrix [:,:,2] = source_matrix
+    if len(source_matrix.shape) > 2:
+        source_matrix = source_matrix[:, :, 0]
 
     # TODO Do assertions here.
     left_marker_coordinates = _get_marker_coords(source_matrix, MARKER_LEFT)
