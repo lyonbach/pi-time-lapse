@@ -41,14 +41,14 @@ class TimeLapseWorker:
 
         # Set ISO to the desired value
 #        self.__camera.iso = 800
-        time.sleep(15)
+#        time.sleep(5)
         # Wait for the automatic gain control to settle
         # Now fix the values
-        self.__camera.shutter_speed = self.__camera.exposure_speed
-        self.__camera.exposure_mode = 'off'
-        g = self.__camera.awb_gains
-        self.__camera.awb_mode = 'off'
-        self.__camera.awb_gains = g
+#       self.__camera.shutter_speed = self.__camera.exposure_speed
+#       self.__camera.exposure_mode = 'off'
+#        g = self.__camera.awb_gains
+#        self.__camera.awb_mode = 'off'
+#        self.__camera.awb_gains = g
 
     def _get_file_name(self):
 
