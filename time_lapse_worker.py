@@ -1,6 +1,7 @@
 import datetime
 from pathlib import Path
 import time
+import picam_flash
 
 import cv2
 from picamera.array import PiRGBArray
@@ -74,8 +75,10 @@ class TimeLapseWorker:
         for image in self.__camera.capture_continuous(f"{Path(self._output_folder)}/" + "{timestamp:%Y%m%d_%H%M%S}" + OUTPUT_EXTENSION):
             print(f"Image: {image}\nNumber: {self._total_shot_count}")
             self._total_shot_count += 1
-            time.sleep(self._interval)
-
+            picam_flash.turn_off()
+            time.sleep(self._interval - 2)
+            picam_flash.turn_on()
+            time.sleep(2)
             if not self._should_continue():
                 break
 
