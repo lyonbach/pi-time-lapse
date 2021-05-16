@@ -48,15 +48,30 @@ class TimeLapseWorker:
         self._total_shot_count = len(list(self._output_folder.glob(f"*{OUTPUT_EXTENSION}")))
         self.__camera = PiCamera()
 
-    def _set_options(self):
-
-        self.__camera.resolution = (1024, 1024)
-
     def _get_file_name(self):
 
         format_string = "%Y%m%d_%H%M%S"  # We do not need more precision than seconds.
         target_file_name = datetime.datetime.strftime(datetime.datetime.now(),  format_string) + OUTPUT_EXTENSION
         return Path(self._output_folder) / target_file_name
+
+    def _get_overall_info(self):
+
+        information_message = "Starting with the following options:\n"
+        information_message += f"\tInterval: {self._interval} seconds.\n"
+
+        if self._flash_warmup_time:
+            information_message += "\tFlash is requested, picam-flash msut be powered and connected to the wi-fi.\n"
+            information_message += f"\tFlash Warm-Up Time: {self._flash_warmup_time} seconds.\n"
+
+        information_message += f"\tOutput Folder: {self._output_folder}\n"
+
+        if self._photo_count_limit != math.inf:
+            information_message += f"\tPhoto Count Limit: {self._photo_count_limit}\n"
+            information_message += "\t* Will stop after this limit  has been reached.\n"
+        else:
+            information_message += "\tNo count limit has been provided.\n"
+
+        return information_message
 
     def _should_continue(self):
 
@@ -66,7 +81,7 @@ class TimeLapseWorker:
 
         return True
 
-    def _flash(self, state):
+    def _set_flash(self, state):
 
         """
         Handles flash.
@@ -94,24 +109,9 @@ class TimeLapseWorker:
         except Exception as error:
             print(f"Unable to connect to wireless flash, Original Error\n\t{error}")
 
-    def _get_overall_info(self):
+    def _set_options(self):
 
-        information_message = "Starting with the following options:\n"
-        information_message += f"\tInterval: {self._interval} seconds.\n"
-
-        if self._flash_warmup_time:
-            information_message += "\tFlash is requested, picam-flash msut be powered and connected to the wi-fi.\n"
-            information_message += f"\tFlash Warm-Up Time: {self._flash_warmup_time} seconds.\n"
-
-        information_message += f"\tOutput Folder: {self._output_folder}\n"
-
-        if self._photo_count_limit != math.inf:
-            information_message += f"\tPhoto Count Limit: {self._photo_count_limit}\n"
-            information_message += "\t* Will stop after this limit  has been reached.\n"
-        else:
-            information_message += "\tNo count limit has been provided.\n"
-
-        return information_message
+        self.__camera.resolution = (1024, 1024)
 
     def start(self):
 
@@ -121,14 +121,14 @@ class TimeLapseWorker:
         self._set_options()
 
         # Prepare for the first shot. Turn on the flash, and give the camera some time to get ready.
-        self._flash("on")
+        self._set_flash("on")
         time.sleep(self._flash_warmup_time)
 
         for image in self.__camera.capture_continuous(f"{Path(self._output_folder)}/" + "{timestamp:%Y%m%d_%H%M%S}" + OUTPUT_EXTENSION):
 
             # After shooting turn off the flash if we are using flash.
             # Function itself handles if flash is requested or not.
-            self._flash("off")
+            self._set_flash("off")
             print(f"Image: {image}\nNumber: {self._total_shot_count}")
             self._total_shot_count += 1
 
@@ -136,10 +136,10 @@ class TimeLapseWorker:
             time.sleep(self._interval - self._flash_warmup_time) 
 
             # Prepare for the next shot. Turn on the flash, and give the camera some time to get ready.
-            self._flash("on")
+            self._set_flash("on")
             time.sleep(self._flash_warmup_time)
             if not self._should_continue():
                 break
 
         print(f"Finished. Photos were saved under\n\t{self._output_folder}")
-        self._flash("stop")
+        self._set_flash("stop")
